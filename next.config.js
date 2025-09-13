@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  basePath: '/markme',
+  basePath: '/MarkMe',
   eslint: {
     ignoreDuringBuilds: true,
   },
