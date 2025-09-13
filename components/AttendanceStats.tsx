@@ -1,23 +1,43 @@
 'use client';
 
 import { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useSpring, useTransform } from 'framer-motion';
 import { Users, UserCheck, UserX, Clock, Download } from 'lucide-react';
 import { useAttendanceStore } from '@/store/attendance-store';
 import { exportAttendanceToExcel } from '@/utils/excel-utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Animated Counter Component for smooth number transitions
+// Optimized Animated Counter Component with spring physics
 const AnimatedCounter = ({ value }: { value: number }) => {
+  const spring = useSpring(value, {
+    stiffness: 300,
+    damping: 30,
+    restDelta: 0.001
+  });
+  const display = useTransform(spring, (latest) => Math.round(latest));
+
   return (
     <motion.span
       key={value}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
+      initial={{ opacity: 0, scale: 0.8, y: 15 }}
+      animate={{
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        transition: {
+          type: "spring" as const,
+          stiffness: 400,
+          damping: 25,
+          duration: 0.3
+        }
+      }}
+      whileHover={{
+        scale: 1.1,
+        transition: { type: "spring" as const, stiffness: 500, damping: 15 }
+      }}
     >
-      {value}
+      <motion.span>{display}</motion.span>
     </motion.span>
   );
 };
@@ -73,40 +93,151 @@ export default function AttendanceStats() {
     }
   ];
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-4xl mx-auto space-y-6"
-    >
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {statCards.map((stat, index) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1, duration: 0.3 }}
-          >
-            <Card>
-              <CardContent className={`p-6 ${stat.bgColor}`}>
-                <div className="flex items-center">
-                  <stat.icon className={`h-8 w-8 ${stat.color}`} />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      <AnimatedCounter value={stat.value} />
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+  // Optimized animation variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring" as const,
+        stiffness: 300,
+        damping: 25,
+        staggerChildren: 0.08,
+        delayChildren: 0.1
+      }
+    }
+  };
 
-      {/* Progress Bar */}
-      {/* <Card>
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.9, y: 20 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring" as const,
+        stiffness: 400,
+        damping: 25
+      }
+    },
+    hover: {
+      scale: 1.02,
+      y: -2,
+      transition: {
+        type: "spring" as const,
+        stiffness: 400,
+        damping: 15
+      }
+    }
+  };
+
+  return (
+    <>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-4xl mx-auto space-y-6"
+      >
+        {/* Statistics Cards */}
+        <motion.div
+          variants={containerVariants}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        >
+          {statCards.map((stat, index) => (
+            <motion.div
+              key={stat.title}
+              variants={cardVariants}
+              whileHover="hover"
+              whileTap={{
+                scale: 0.98,
+                transition: { type: "spring" as const, stiffness: 600, damping: 15 }
+              }}
+            >
+              <Card className="overflow-hidden">
+                <CardContent className={`p-6 ${stat.bgColor} relative`}>
+                  <motion.div
+                    className="flex items-center"
+                    initial={{ x: -10, opacity: 0 }}
+                    animate={{
+                      x: 0,
+                      opacity: 1,
+                      transition: {
+                        delay: index * 0.05,
+                        type: "spring" as const,
+                        stiffness: 300
+                      }
+                    }}
+                  >
+                    <motion.div
+                      whileHover={{
+                        rotate: 360,
+                        scale: 1.1,
+                        transition: {
+                          type: "spring" as const,
+                          stiffness: 400,
+                          damping: 15,
+                          duration: 0.6
+                        }
+                      }}
+                    >
+                      <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                    </motion.div>
+                    <div className="ml-4">
+                      <motion.p
+                        className="text-sm font-medium text-gray-600"
+                        initial={{ opacity: 0 }}
+                        animate={{
+                          opacity: 1,
+                          transition: { delay: index * 0.05 + 0.1 }
+                        }}
+                      >
+                        {stat.title}
+                      </motion.p>
+                      <motion.p
+                        className="text-2xl font-bold text-gray-900"
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{
+                          scale: 1,
+                          opacity: 1,
+                          transition: {
+                            delay: index * 0.05 + 0.2,
+                            type: "spring" as const,
+                            stiffness: 400,
+                            damping: 20
+                          }
+                        }}
+                      >
+                        <AnimatedCounter value={stat.value} />
+                      </motion.p>
+                    </div>
+                  </motion.div>
+
+                  {/* Subtle background animation */}
+                  <motion.div
+                    className="absolute inset-0 opacity-10"
+                    animate={{
+                      background: [
+                        `radial-gradient(circle at 0% 0%, ${stat.color.replace('text-', 'rgb(')} 0%, transparent 50%)`,
+                        `radial-gradient(circle at 100% 100%, ${stat.color.replace('text-', 'rgb(')} 0%, transparent 50%)`,
+                        `radial-gradient(circle at 0% 0%, ${stat.color.replace('text-', 'rgb(')} 0%, transparent 50%)`
+                      ]
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Progress Bar */}
+        {/* <Card>
         <CardContent className="p-6">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
@@ -130,45 +261,77 @@ export default function AttendanceStats() {
         </CardContent>
       </Card> */}
 
-      {/* Export Section */}
-      {(endTime || (!isActive && stats.present + stats.absent > 0)) && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-gray-900">
-                Export Results
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600">
-                    Download the attendance report as an Excel file with color-coded status.
-                  </p>
-                  {endTime && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      Session completed at {new Date(endTime).toLocaleTimeString()}
+        {/* Export Section */}
+        {(endTime || (!isActive && stats.present + stats.absent > 0)) && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              transition: {
+                type: "spring" as const,
+                stiffness: 300,
+                damping: 25,
+                delay: 0.4
+              }
+            }}
+            whileHover={{
+              scale: 1.01,
+              transition: { type: "spring" as const, stiffness: 400, damping: 15 }
+            }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-gray-900">
+                  Export Results
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600">
+                      Download the attendance report as an Excel file with color-coded status.
                     </p>
-                  )}
-                </div>
+                    {endTime && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        Session completed at {new Date(endTime).toLocaleTimeString()}
+                      </p>
+                    )}
+                  </div>
 
-                <Button
-                  onClick={handleExport}
-                  size="lg"
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Download className="mr-2 h-5 w-5" />
-                  Download Excel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-    </motion.div>
+                  <motion.div
+                    whileHover={{
+                      scale: 1.05,
+                      transition: { type: "spring", stiffness: 400, damping: 10 }
+                    }}
+                    whileTap={{
+                      scale: 0.95,
+                      transition: { type: "spring" as const, stiffness: 600, damping: 15 }
+                    }}
+                  >
+                    <Button
+                      onClick={handleExport}
+                      size="lg"
+                      className="bg-green-600 hover:bg-green-700 transition-colors duration-150"
+                    >
+                      <motion.div
+                        whileHover={{
+                          y: -2,
+                          transition: { type: "spring" as const, stiffness: 400, damping: 10 }
+                        }}
+                      >
+                        <Download className="mr-2 h-5 w-5" />
+                      </motion.div>
+                      Download Excel
+                    </Button>
+                  </motion.div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </motion.div>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, Clock, Search, Edit3 } from 'lucide-react';
 import { useAttendanceStore } from '@/store/attendance-store';
@@ -12,6 +12,13 @@ export default function AttendanceTable() {
   const { students, markAttendance, endTime, isActive } = useAttendanceStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Set initial load to false after first render
+  useEffect(() => {
+    const timer = setTimeout(() => setIsInitialLoad(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Check if attendance is completed (session ended or all students marked)
   const canEdit = useMemo(() => {
@@ -74,9 +81,9 @@ export default function AttendanceTable() {
     let baseClasses = 'border-b border-gray-100 transition-all duration-300';
 
     if (status === 'present') {
-      baseClasses += ' bg-green-50';
+      baseClasses += ' bg-green-100';
     } else if (status === 'absent') {
-      baseClasses += ' bg-red-50';
+      baseClasses += ' bg-red-100';
     } else {
       baseClasses += ' hover:bg-gray-50';
     }
@@ -88,34 +95,41 @@ export default function AttendanceTable() {
     return baseClasses;
   };
 
+
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.5 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className="max-w-4xl mx-auto mt-8"
     >
       <Card>
-        <CardHeader>
+        <CardHeader className="space-y-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl font-bold text-gray-900">
               Live Attendance
             </CardTitle>
             {canEdit && (
-              <Button
-                onClick={() => setIsEditing(!isEditing)}
-                variant={isEditing ? "default" : "outline"}
-                size="sm"
-                className="flex items-center space-x-2"
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <Edit3 className="h-4 w-4" />
-                <span>{isEditing ? 'Done Editing' : 'Edit Attendance'}</span>
-              </Button>
+                <Button
+                  onClick={() => setIsEditing(!isEditing)}
+                  variant={isEditing ? "default" : "outline"}
+                  size="sm"
+                  className="flex items-center space-x-2"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  <span>{isEditing ? 'Done Editing' : 'Edit Attendance'}</span>
+                </Button>
+              </motion.div>
             )}
           </div>
 
           {/* Search Bar */}
-          <div className="relative mt-4">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
@@ -126,28 +140,70 @@ export default function AttendanceTable() {
             />
           </div>
 
-          {isEditing && (
-            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-700">
-                <strong>Edit Mode:</strong> Click on any status to toggle between Present and Absent
-              </p>
-            </div>
-          )}
+          {/* Edit Mode Disclaimer - Only show when editing, no reserved space */}
+          <AnimatePresence>
+            {isEditing && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{
+                  opacity: 1,
+                  height: "auto",
+                  transition: { duration: 0.2, ease: "easeOut" }
+                }}
+                exit={{
+                  opacity: 0,
+                  height: 0,
+                  transition: { duration: 0.15 }
+                }}
+                className="overflow-hidden"
+              >
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    <strong>Edit Mode:</strong> Click on any status to toggle between Present and Absent
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </CardHeader>
 
         <CardContent className="p-0">
-          <div className="max-h-96 overflow-y-auto">
+          <div className="overflow-hidden">
             <table className="w-full">
-              <thead className="bg-gray-50 sticky top-0 z-10">
+              <thead className="bg-gray-200 sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-1000">
                     Registration No.
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-1000">
                     Name
                   </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
-                    Status {isEditing && <span className="text-xs text-blue-600">(Click to edit)</span>}
+                    <div className="flex flex-col items-center justify-center min-h-[3rem]">
+                      <span>Status</span>
+                      <div className="h-4 flex items-center">
+                        <AnimatePresence>
+                          {isEditing && (
+                            <motion.span
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{
+                                opacity: 1,
+                                y: 0,
+                                transition: { duration: 0.2 }
+                              }}
+                              exit={{
+                                opacity: 0,
+                                y: -5,
+                                transition: { duration: 0.15 }
+                              }}
+                              className="text-xs text-blue-600 whitespace-nowrap"
+                            >
+                              (Click to edit)
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </div>
                   </th>
                 </tr>
               </thead>
@@ -157,10 +213,20 @@ export default function AttendanceTable() {
                     filteredStudents.map((student, index) => (
                       <motion.tr
                         key={student.regNo}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05, duration: 0.3 }}
-                        className={getRowClassName(student.status)}
+                        initial={isInitialLoad ? { opacity: 0, x: -10 } : false}
+                        animate={isInitialLoad ? {
+                          opacity: 1,
+                          x: 0,
+                          transition: {
+                            delay: index * 0.02,
+                            duration: 0.3,
+                            ease: "easeOut"
+                          }
+                        } : {}}
+                        className={`border-b border-gray-100 transition-colors duration-200 ${student.status === 'present' ? 'bg-green-100 hover:bg-green-200' :
+                          student.status === 'absent' ? 'bg-red-100 hover:bg-red-200' :
+                            'hover:bg-gray-50'
+                          } ${isEditing && student.status ? 'cursor-pointer' : ''}`}
                       >
                         <td className="px-6 py-4 text-sm font-medium text-gray-900">
                           {student.regNo}
@@ -170,21 +236,52 @@ export default function AttendanceTable() {
                         </td>
                         <td className="px-6 py-4 text-center">
                           <motion.div
-                            key={student.status}
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ duration: 0.2 }}
-                            className={`flex items-center justify-center space-x-2 ${isEditing && student.status ? 'cursor-pointer hover:scale-105 transition-transform' : ''
-                              }`}
+                            className={`flex items-center justify-center space-x-2 p-3 -m-3 rounded-lg ${isEditing && student.status ? 'cursor-pointer' : ''}`}
                             onClick={() => handleStatusToggle(index, student.status)}
+                            whileHover={isEditing && student.status ? {
+                              scale: 1.05,
+                              transition: { type: "spring", stiffness: 400, damping: 10 }
+                            } : {}}
+                            whileTap={isEditing && student.status ? {
+                              scale: 0.95,
+                              transition: { type: "spring", stiffness: 600, damping: 15 }
+                            } : {}}
                           >
-                            {getStatusIcon(student.status)}
-                            <span className={`text-sm font-medium ${student.status === 'present' ? 'text-green-700' :
+                            <motion.div
+                              key={`${student.regNo}-icon-${student.status}`}
+                              initial={{ scale: 0.8, rotate: -10 }}
+                              animate={{
+                                scale: 1,
+                                rotate: 0,
+                                transition: {
+                                  type: "spring",
+                                  stiffness: 500,
+                                  damping: 20
+                                }
+                              }}
+                            >
+                              {getStatusIcon(student.status)}
+                            </motion.div>
+                            <motion.span
+                              key={`${student.regNo}-text-${student.status}`}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{
+                                opacity: 1,
+                                y: 0,
+                                transition: {
+                                  type: "spring",
+                                  stiffness: 400,
+                                  damping: 25,
+                                  delay: 0.1
+                                }
+                              }}
+                              className={`text-sm font-medium ${student.status === 'present' ? 'text-green-700' :
                                 student.status === 'absent' ? 'text-red-700' :
                                   'text-gray-500'
-                              }`}>
+                                }`}
+                            >
                               {getStatusText(student.status)}
-                            </span>
+                            </motion.span>
                           </motion.div>
                         </td>
                       </motion.tr>
