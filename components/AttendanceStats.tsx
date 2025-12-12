@@ -4,8 +4,8 @@ import { useMemo } from 'react';
 import { motion, useSpring, useTransform } from 'framer-motion';
 import { Users, UserCheck, UserX, Clock, Download } from 'lucide-react';
 import { useAttendanceStore } from '@/store/attendance-store';
-import { exportAttendanceToExcel } from '@/utils/excel-utils';
-import { Button } from '@/components/ui/button';
+// import { exportAttendanceToExcel } from '@/utils/excel-utils';
+// import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Optimized Animated Counter Component with spring physics
@@ -43,7 +43,9 @@ const AnimatedCounter = ({ value }: { value: number }) => {
 };
 
 export default function AttendanceStats() {
-  const { students, isActive, endTime } = useAttendanceStore();
+  const students = useAttendanceStore((state) => state.students);
+  const isActive = useAttendanceStore((state) => state.isActive);
+  const endTime = useAttendanceStore((state) => state.endTime);
 
   // Calculate stats directly from students array to ensure reactivity
   const stats = useMemo(() => {
@@ -55,10 +57,10 @@ export default function AttendanceStats() {
     return { total, present, absent, pending };
   }, [students]);
 
-  const handleExport = () => {
-    const fileName = `attendance_${new Date().toISOString().split('T')[0]}`;
-    exportAttendanceToExcel(students, fileName);
-  };
+  // const handleExport = () => {
+  //   const fileName = `attendance_${new Date().toISOString().split('T')[0]}`;
+  //   exportAttendanceToExcel(students, fileName);
+  // };
 
   if (students.length === 0) return null;
 
@@ -262,75 +264,7 @@ export default function AttendanceStats() {
       </Card> */}
 
         {/* Export Section */}
-        {(endTime || (!isActive && stats.present + stats.absent > 0)) && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 30 }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-              y: 0,
-              transition: {
-                type: "spring" as const,
-                stiffness: 300,
-                damping: 25,
-                delay: 0.4
-              }
-            }}
-            whileHover={{
-              scale: 1.01,
-              transition: { type: "spring" as const, stiffness: 400, damping: 15 }
-            }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl font-bold text-gray-900">
-                  Export Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-600">
-                      Download the attendance report as an Excel file with color-coded status.
-                    </p>
-                    {endTime && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        Session completed at {new Date(endTime).toLocaleTimeString()}
-                      </p>
-                    )}
-                  </div>
-
-                  <motion.div
-                    whileHover={{
-                      scale: 1.05,
-                      transition: { type: "spring", stiffness: 400, damping: 10 }
-                    }}
-                    whileTap={{
-                      scale: 0.95,
-                      transition: { type: "spring" as const, stiffness: 600, damping: 15 }
-                    }}
-                  >
-                    <Button
-                      onClick={handleExport}
-                      size="lg"
-                      className="bg-green-600 hover:bg-green-700 transition-colors duration-150"
-                    >
-                      <motion.div
-                        whileHover={{
-                          y: -2,
-                          transition: { type: "spring" as const, stiffness: 400, damping: 10 }
-                        }}
-                      >
-                        <Download className="mr-2 h-5 w-5" />
-                      </motion.div>
-                      Download Excel
-                    </Button>
-                  </motion.div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+        
       </motion.div>
     </>
   );

@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && next export",
+    "build": "next build",
     "postbuild": "node postbuild.js",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -46,23 +48,27 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "csv-parser": "^3.2.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "eslint": "8.49.0",
     "eslint-config-next": "13.5.1",
+    "firebase": "^12.6.0",
+    "firebase-admin": "^13.6.0",
     "framer-motion": "^12.23.12",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.544.0",
     "next": "13.5.1",
     "next-themes": "^0.3.0",
     "postcss": "8.4.30",
-    "react": "18.2.0",
+    "react": "^18.2.0",
     "react-day-picker": "^8.10.1",
-    "react-dom": "18.2.0",
+    "react-dom": "^18.2.0",
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.53.0",
     "react-resizable-panels": "^2.1.3",
     "recharts": "^2.12.7",
+    "socket.io-client": "^4.8.1",
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss": "3.3.3",
@@ -74,6 +80,13 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "gh-pages": "^6.3.0"
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
+    "gh-pages": "^6.3.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "ts-jest": "^29.4.6"
   }
 }

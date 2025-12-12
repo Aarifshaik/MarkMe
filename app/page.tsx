@@ -1,80 +1,41 @@
 'use client';
 
-import { useAttendanceStore } from '@/store/attendance-store';
-import FileUpload from '@/components/FileUpload';
-import AttendanceSession from '@/components/AttendanceSession';
-import AttendanceTable from '@/components/AttendanceTable';
-import AttendanceStats from '@/components/AttendanceStats';
-import { Toaster } from 'sonner';
-import Footer from '@/components/Footer';
+import { useEffect, useRef } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 export default function Home() {
-  // const { students, resetSession, isActive } = useAttendanceStore();
-  const { students } = useAttendanceStore();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+  const hasRedirected = useRef(false);
 
-  // const handleReset = () => {
-  //   if (window.confirm('Are you sure you want to reset the session? All progress will be lost.')) {
-  //     resetSession();
-  //   }
-  // };
+  useEffect(() => {
+    // Prevent multiple redirects
+    if (hasRedirected.current) return;
+    
+    if (!isLoading) {
+      hasRedirected.current = true;
+      if (!isAuthenticated) {
+        router.replace('/login');
+      } else if (user?.role === 'admin') {
+        router.replace('/admin');
+      } else if (user?.role === 'kiosk') {
+        router.replace('/kiosk');
+      } else {
+        // Fallback: if authenticated but no valid role, go to login
+        router.replace('/login');
+      }
+    }
+  }, [user, isAuthenticated, isLoading, router]);
 
+  // Show loading while determining redirect
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-8">
-        {students.length === 0 ? (
-          <FileUpload />
-        ) : (
-          <div className="space-y-8">
-            {/* Attendance Session Control Card */}
-            {/* <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="max-w-4xl mx-auto"
-            >
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h1 className="text-3xl font-bold text-gray-900">
-                        Classroom Attendance Session
-                      </h1>
-                      <p className="text-gray-600 mt-1">
-                        {students.length} students loaded
-                      </p>
-                    </div>
-
-                    <div className="flex space-x-3">
-                      <Button
-                        onClick={handleReset}
-                        variant="outline"
-                        className="flex items-center"
-                        disabled={isActive}
-                      >
-                        <RotateCcw className="mr-2 h-4 w-4" />
-                        Reset Session
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div> */}
-
-            {/* Main Content */}
-            <AttendanceSession />
-            <AttendanceStats />
-            <AttendanceTable />
-          </div>
-        )}
-
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+        <p className="text-gray-600">Redirecting...</p>
       </div>
-
-      <Toaster
-        position="top-right"
-        richColors
-        closeButton
-      />
-      <Footer />
-    </main>
-
+    </div>
   );
 }
